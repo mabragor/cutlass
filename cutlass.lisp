@@ -33,3 +33,31 @@
 	    (iter (for num from 1 to (cdr (assoc num-intersections *rolfsen-total-numbers*)))
 		  (format stream #?"~a\trolfsen:~a_~a\n" (incf knot-id) num-intersections num)))))
   :success!)
+
+(defmacro with-html (&body body)
+  `(with-html-output-to-string (*standard-output* nil :prologue t)
+     ,@body))
+
+(defun handle-query (query)
+  nil)
+
+(define-easy-handler (easy-demo :uri "/hello"
+				:default-request-type :get)
+    ()
+  (let (post-parameter-p query-result)
+    (when (post-parameter "query")
+      (setf query-result (handle-query (post-parameter "query")))
+      (setq post-parameter-p t))
+    (no-cache)
+    (with-html
+      (:html
+       (:head (:title "This is Cutlass"))
+       (:body
+	(:form :method :post :enctype "multipart/form-data"
+	       (:p "What can I do for you?<br> "
+		   (:textarea :id "query" :name "query" :rows "5" :cols "80"))
+	       (:p (:input :type :submit :value "=)")))
+	(when post-parameter-p
+	  (htm :hr)
+	  (cond (t (htm (:p "I'm sorry, but I don't know what you mean."))))))))))
+
