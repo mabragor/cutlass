@@ -38,12 +38,24 @@
   `(with-html-output-to-string (*standard-output* nil :prologue t)
      ,@body))
 
+(defun simple-name-query (query)
+  (with-connection
+      (let* ((sql (prepare *connection* "select knot_id from knot_names where name = ?"))
+	     (result (execute sql query)))
+	(iter (for row next (let ((it (fetch result)))
+			      (or it (terminate))))
+	      (collect row)))))
+
+
 (defun handle-query (query)
   (cond ((string= "ping" (string-downcase query))
 	 (list :text "pong"))
 	((string= "pong" (string-downcase query))
 	 (list :unknown-tag :something))
-	(t nil)))
+	(t (let ((res (simple-name-query query)))
+	     (if res
+		 (list :text-list res)
+		 nil)))))
 
 (define-easy-handler (easy-demo :uri "/hello"
 				:default-request-type :get)
@@ -67,4 +79,6 @@
 	      (htm (:p "I'm sorry, but I don't know what you mean."))
 	      (destructuring-bind (type result) query-result
 		(cond ((eq :text type) (htm (:p (str result))))
+		      ((eq :text-list type) (dolist (elt result)
+					      (htm (:p (str elt)))))
 		      (t (error "Unknown type of query result")))))))))))
