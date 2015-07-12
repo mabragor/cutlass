@@ -39,7 +39,11 @@
      ,@body))
 
 (defun handle-query (query)
-  nil)
+  (cond ((string= "ping" (string-downcase query))
+	 (list :text "pong"))
+	((string= "pong" (string-downcase query))
+	 (list :unknown-tag :something))
+	(t nil)))
 
 (define-easy-handler (easy-demo :uri "/hello"
 				:default-request-type :get)
@@ -59,5 +63,8 @@
 	       (:p (:input :type :submit :value "=)")))
 	(when post-parameter-p
 	  (htm :hr)
-	  (cond (t (htm (:p "I'm sorry, but I don't know what you mean."))))))))))
-
+	  (if (not query-result)
+	      (htm (:p "I'm sorry, but I don't know what you mean."))
+	      (destructuring-bind (type result) query-result
+		(cond ((eq :text type) (htm (:p (str result))))
+		      (t (error "Unknown type of query result")))))))))))
