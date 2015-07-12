@@ -1,0 +1,5 @@
+
+* querying for all knots with a given HOMFLY in strict HOMFLY format
+* when there is one knot matching, show it's detailed table
+* do something with knot_id being primary key -- add ability to add knot
+  aliases, convenient names
