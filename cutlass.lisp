@@ -65,7 +65,17 @@
 				    (or it (terminate))))
 		    (collect row))))))
 
+(define-condition query-handling-error (error simple-condition)
+  ())
+
+(defmacro wont-handle ()
+  `(error 'query-handling-error))
+
+(defmacro query-handling-or (&rest clauses)
+  ...)
+
 (defun handle-query (query)
+      
   (cond ((string= "ping" (string-downcase query))
 	 (list :text "pong"))
 	((string= "pong" (string-downcase query))
