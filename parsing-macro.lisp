@@ -1,6 +1,12 @@
 
 (in-package #:cutlass)
 
-(enable-read-macro-tokens)
+(defreadtable :cutlass-parsing-syntax
+    (:merge :standard)
+  (:macro-char #\( #'cl-read-macro-tokens::read-list-new))
+
+;; (in-readtable :cutlass-parsing-syntax)
+
+;; (enable-read-macro-tokens)
 
 (define-esrap-env cutlass)
