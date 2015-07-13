@@ -141,15 +141,18 @@
 	  (mathematica-bulk-receive)))
 
 (defun get-raw-poly-representation (thing)
-  (mathematica-bulk-send expr (list (cl-ppcre:regex-replace-all #?"\n|\t|\r" thing " ")))
-  "1,2,3")
+  (mathematica-bulk-send expr (list (cl-ppcre:regex-replace-all "\\n|\\t|\\r" thing " ")))
+  (mathematica-bulk-run "/home/hunchentoot/quicklisp/local-projects/cutlass/get-raw-rep.m")
+  (car (mathematica-bulk-receive)))
 
 (define-query-handler mathematica-polynomial
     (looks-kinda-like-mathematica-polynomial-p *query*)
   (let ((raw (handler-case (get-raw-poly-representation *query*)
 	       (error () (wont-handle)))))
-    (list :text "Should've created lisp-out.txt")))
-;; (raw-polynomial-query raw)))
+    ;; (list :text "Should've created lisp-out.txt")))
+    (let ((*query* raw))
+      (declare (special *query*))
+      (raw-polynomial))))
 
 (defun handle-query (query)
   (let ((*query* query))
