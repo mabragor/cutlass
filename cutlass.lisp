@@ -38,6 +38,9 @@
   `(with-html-output-to-string (*standard-output* nil :prologue t)
      ,@body))
 
+(defun normalize-query (query)
+  (string-trim '(#\space #\tab #\newline #\return) query))
+
 (defun simple-name-query (query)
   (with-connection
       (let* ((sql (prepare *connection* "select knot_id from knot_names where name = ?"))
@@ -46,23 +49,39 @@
 			      (or it (terminate))))
 	      (collect row)))))
 
+(defun raw-polynomial-query-p (query)
+  (handler-case (cutlass-parse 'raw-polynomial query)
+    (esrap-liquid::simple-esrap-error () nil)
+    (:no-error (&rest args)
+      (declare (ignore args))
+      t)))
+
+(defun raw-polynomial-query (query)
+  (list :text-list
+	(with-connection
+	    (let* ((sql (prepare *connection* "select knot_id from 1_homflies where poly = ?"))
+		   (result (execute sql query)))
+	      (iter (for row next (let ((it (fetch result)))
+				    (or it (terminate))))
+		    (collect row))))))
 
 (defun handle-query (query)
   (cond ((string= "ping" (string-downcase query))
 	 (list :text "pong"))
 	((string= "pong" (string-downcase query))
 	 (list :unknown-tag :something))
+	((raw-polynomial-query-p query) (raw-polynomial-query query))
 	(t (let ((res (simple-name-query query)))
 	     (if res
 		 (list :text-list res)
 		 nil)))))
 
-(define-easy-handler (easy-demo :uri "/hello"
+(define-easy-handler (easy-demo :uri "/cutlass.ru/home.html"
 				:default-request-type :get)
     ()
   (let (post-parameter-p query-result)
     (when (post-parameter "query")
-      (setf query-result (handle-query (post-parameter "query")))
+      (setf query-result (handle-query (normalize-query (post-parameter "query"))))
       (setq post-parameter-p t))
     (no-cache)
     (with-html
