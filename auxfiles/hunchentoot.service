@@ -1,0 +1,13 @@
+
+[Unit]
+Description=Launch Hunchentoot with systemd
+
+[Service]
+Type=forking
+ExecStart=/home/hunchentoot/start-hunchentoot
+ExecStop=/usr/bin/telnet 127.0.0.1 6200 &
+User=hunchentoot
+Restart=always
+
+[Install]
+WantedBy=default.target
